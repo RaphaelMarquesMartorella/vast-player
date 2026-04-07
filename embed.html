@@ -145,6 +145,16 @@
             // Use placeholder if no content
             const videoSource = contentUrl || PLACEHOLDER_VIDEO;
 
+            // Configure IMA options BEFORE creating player
+            const imaOptions = {
+                adTagUrl: decodeURIComponent(vastUrl),
+                vpaidMode: vpaidMode,
+                autoPlayAdBreaks: true,
+                adsRenderingSettings: {
+                    enablePreloading: true
+                }
+            };
+
             player = videojs('vast-player', {
                 controls: true,
                 autoplay: false,
@@ -154,70 +164,42 @@
                 sources: [{ src: videoSource, type: 'video/mp4' }]
             });
 
-            player.ready(function() {
-                // Configure IMA
-                const imaOptions = {
-                    adTagUrl: decodeURIComponent(vastUrl),
-                    id: 'vast-player',
-                    vpaidMode: vpaidMode,
-                    autoPlayAdBreaks: true,
-                    adsRenderingSettings: {
-                        enablePreloading: true
-                    },
-                    contribAdsSettings: {
-                        timeout: 8000,
-                        prerollTimeout: 8000
-                    }
-                };
+            // Initialize IMA immediately after player creation
+            player.ima(imaOptions);
 
-                try {
-                    player.ima(imaOptions);
+            // Event handlers
+            player.on('ads-load', function() {
+                console.log('[VAST Player] Ad loaded');
+                postMessage('ad-loaded');
+            });
 
-                    // Event handlers
-                    player.on('ads-load', function() {
-                        console.log('[VAST Player] Ad loaded');
-                        postMessage('ad-loaded');
-                    });
+            player.on('ads-ad-started', function() {
+                console.log('[VAST Player] Ad started');
+                postMessage('ad-started');
+            });
 
-                    player.on('ads-ad-started', function() {
-                        console.log('[VAST Player] Ad started');
-                        postMessage('ad-started');
-                    });
+            player.on('ads-ad-ended', function() {
+                console.log('[VAST Player] Ad ended');
+                postMessage('ad-ended');
+            });
 
-                    player.on('ads-ad-ended', function() {
-                        console.log('[VAST Player] Ad ended');
-                        postMessage('ad-ended');
-                    });
+            player.on('adserror', function(e) {
+                const errorMsg = e.data?.AdError?.getMessage?.() || 'Erro desconhecido';
+                console.error('[VAST Player] Ad error:', errorMsg);
+                showError('Erro: ' + errorMsg);
+                postMessage('ad-error', { message: errorMsg });
+            });
 
-                    player.on('adserror', function(e) {
-                        const errorMsg = e.data?.AdError?.getMessage?.() || 'Erro desconhecido';
-                        console.error('[VAST Player] Ad error:', errorMsg);
-                        showError('Erro: ' + errorMsg);
-                        postMessage('ad-error', { message: errorMsg });
-                    });
+            player.on('adsready', function() {
+                console.log('[VAST Player] Ads ready');
+                postMessage('ads-ready');
+            });
 
-                    player.on('adsready', function() {
-                        console.log('[VAST Player] Ads ready');
-                        postMessage('ads-ready');
-                    });
-
-                    // Initialize on first click
-                    player.one('click', function() {
-                        player.ima.initializeAdDisplayContainer();
-                        player.ima.requestAds();
-                        player.play();
-                    });
-
-                    // Auto-start if requested
-                    if (autoplay) {
-                        player.ima.initializeAdDisplayContainer();
-                        player.ima.requestAds();
-                        player.play();
-                    }
-
-                } catch (err) {
-                    console.error('[VAST Player] Init error:', err);
-                    showError('Erro ao inicializar: ' + err.message);
+            // Set up click handler to initialize ads on user interaction
+            player.on('play', function() {
+                if (!player.ima.getAdsManager()) {
+                    player.ima.initializeAdDisplayContainer();
+                    player.ima.requestAds();
                 }
             });
         }
