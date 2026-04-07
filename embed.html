@@ -5,77 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Player VAST/VPAID</title>
 
-    <!-- Video.js CSS -->
     <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/videojs-contrib-ads@7.5.2/dist/videojs-contrib-ads.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/videojs-ima@2.3.0/dist/videojs.ima.css" rel="stylesheet">
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: #000;
-        }
-
-        .video-js {
-            width: 100%;
-            height: 100%;
-        }
-
-        .vjs-fluid {
-            padding-top: 0 !important;
-            height: 100% !important;
-        }
-
-        /* Error overlay */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+        #content_video { width: 100%; height: 100%; }
         .error-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            z-index: 9999;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; z-index: 9999;
         }
-
-        .error-overlay.hidden {
-            display: none;
-        }
-
-        .error-icon {
-            font-size: 48px;
-            margin-bottom: 20px;
-        }
-
-        .error-message {
-            font-size: 16px;
-            text-align: center;
-            max-width: 80%;
-            color: #ff6b6b;
-        }
-
+        .error-overlay.hidden { display: none; }
+        .error-icon { font-size: 48px; margin-bottom: 20px; }
+        .error-message { font-size: 16px; text-align: center; max-width: 80%; color: #ff6b6b; }
         .retry-btn {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background: #00d4ff;
-            color: #000;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
+            margin-top: 20px; padding: 10px 20px; background: #00d4ff;
+            color: #000; border: none; border-radius: 6px; font-size: 14px; cursor: pointer;
         }
     </style>
 </head>
@@ -83,188 +31,70 @@
     <div id="error-overlay" class="error-overlay hidden">
         <div class="error-icon">&#9888;</div>
         <div class="error-message" id="error-message">Erro ao carregar o anuncio</div>
-        <button class="retry-btn" onclick="retryAd()">Tentar Novamente</button>
+        <button class="retry-btn" onclick="location.reload()">Tentar Novamente</button>
     </div>
 
-    <video
-        id="vast-player"
-        class="video-js vjs-big-play-centered"
-        controls
-        preload="auto"
-        playsinline
-    >
-        <p class="vjs-no-js">Para assistir este video, habilite JavaScript.</p>
+    <video id="content_video" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto" playsinline>
+        <source src="https://storage.googleapis.com/interactive-media-ads/media/android.mp4" type="video/mp4">
     </video>
 
-    <!-- Video.js -->
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
-
-    <!-- Google IMA SDK -->
     <script src="https://imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
-
-    <!-- videojs-contrib-ads -->
     <script src="https://cdn.jsdelivr.net/npm/videojs-contrib-ads@7.5.2/dist/videojs-contrib-ads.min.js"></script>
-
-    <!-- videojs-ima -->
     <script src="https://cdn.jsdelivr.net/npm/videojs-ima@2.3.0/dist/videojs.ima.min.js"></script>
 
     <script>
-        let player = null;
-        let vastUrl = '';
-        let vpaidMode = 2; // ENABLED by default
-        let contentUrl = '';
-        let autoplay = false;
+        // Parse URL params
+        const params = new URLSearchParams(window.location.search);
+        const vastUrl = params.get('vast') ? decodeURIComponent(params.get('vast')) : '';
+        const vpaidMode = parseInt(params.get('vpaid') || '2');
 
-        // Placeholder video
-        const PLACEHOLDER_VIDEO = 'https://storage.googleapis.com/interactive-media-ads/media/android.mp4';
+        if (!vastUrl) {
+            document.getElementById('error-message').textContent = 'Nenhuma tag VAST fornecida';
+            document.getElementById('error-overlay').classList.remove('hidden');
+        } else {
+            // Create player and init IMA in the same tick
+            var player = videojs('content_video');
 
-        // Parse URL parameters
-        function getParams() {
-            const params = new URLSearchParams(window.location.search);
-            vastUrl = params.get('vast') || '';
-            vpaidMode = parseInt(params.get('vpaid') || '2');
-            contentUrl = params.get('content') || '';
-            autoplay = params.get('autoplay') === '1' || params.get('autoplay') === 'true';
-        }
-
-        // Initialize on load
-        document.addEventListener('DOMContentLoaded', function() {
-            getParams();
-
-            if (!vastUrl) {
-                showError('Nenhuma tag VAST fornecida. Use o parametro ?vast=URL');
-                return;
-            }
-
-            initPlayer();
-        });
-
-        function initPlayer() {
-            hideError();
-
-            // Use placeholder if no content
-            const videoSource = contentUrl || PLACEHOLDER_VIDEO;
-
-            // Configure IMA options BEFORE creating player
-            const imaOptions = {
-                adTagUrl: decodeURIComponent(vastUrl),
-                vpaidMode: vpaidMode,
-                autoPlayAdBreaks: true,
-                adsRenderingSettings: {
-                    enablePreloading: true
-                }
+            var options = {
+                adTagUrl: vastUrl,
+                vpaidMode: vpaidMode
             };
 
-            player = videojs('vast-player', {
-                controls: true,
-                autoplay: false,
-                preload: 'auto',
-                fill: true,
-                responsive: true,
-                sources: [{ src: videoSource, type: 'video/mp4' }]
-            });
+            player.ima(options);
 
-            // Initialize IMA immediately after player creation
-            player.ima(imaOptions);
+            // On mobile, initializeAdDisplayContainer must be called on user action
+            var startEvent = 'click';
+            if (navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i) || navigator.userAgent.match(/Android/i)) {
+                startEvent = 'touchend';
+            }
 
-            // Event handlers
-            player.on('ads-load', function() {
-                console.log('[VAST Player] Ad loaded');
-                postMessage('ad-loaded');
+            var initAdDisplayContainer = function() {
+                player.ima.initializeAdDisplayContainer();
+                wrapperDiv.removeEventListener(startEvent, initAdDisplayContainer);
+            };
+
+            var wrapperDiv = document.getElementById('content_video');
+            wrapperDiv.addEventListener(startEvent, initAdDisplayContainer);
+
+            // Error handling
+            player.on('adserror', function(e) {
+                console.error('[VAST Player] Ad error:', e);
+                var msg = 'Erro ao carregar anuncio';
+                if (e.data && e.data.AdError) {
+                    msg = 'Erro: ' + e.data.AdError.getMessage();
+                }
+                document.getElementById('error-message').textContent = msg;
+                document.getElementById('error-overlay').classList.remove('hidden');
             });
 
             player.on('ads-ad-started', function() {
                 console.log('[VAST Player] Ad started');
-                postMessage('ad-started');
+                document.getElementById('error-overlay').classList.add('hidden');
             });
 
-            player.on('ads-ad-ended', function() {
-                console.log('[VAST Player] Ad ended');
-                postMessage('ad-ended');
-            });
-
-            player.on('adserror', function(e) {
-                const errorMsg = e.data?.AdError?.getMessage?.() || 'Erro desconhecido';
-                console.error('[VAST Player] Ad error:', errorMsg);
-                showError('Erro: ' + errorMsg);
-                postMessage('ad-error', { message: errorMsg });
-            });
-
-            player.on('adsready', function() {
-                console.log('[VAST Player] Ads ready');
-                postMessage('ads-ready');
-            });
-
-            // Set up click handler to initialize ads on user interaction
-            player.on('play', function() {
-                if (!player.ima.getAdsManager()) {
-                    player.ima.initializeAdDisplayContainer();
-                    player.ima.requestAds();
-                }
-            });
+            console.log('[VAST Player] Initialized with tag:', vastUrl);
         }
-
-        function showError(message) {
-            document.getElementById('error-message').textContent = message;
-            document.getElementById('error-overlay').classList.remove('hidden');
-        }
-
-        function hideError() {
-            document.getElementById('error-overlay').classList.add('hidden');
-        }
-
-        function retryAd() {
-            if (player) {
-                player.dispose();
-            }
-
-            // Recreate video element
-            document.body.innerHTML = `
-                <div id="error-overlay" class="error-overlay hidden">
-                    <div class="error-icon">&#9888;</div>
-                    <div class="error-message" id="error-message">Erro ao carregar o anuncio</div>
-                    <button class="retry-btn" onclick="retryAd()">Tentar Novamente</button>
-                </div>
-                <video
-                    id="vast-player"
-                    class="video-js vjs-big-play-centered"
-                    controls
-                    preload="auto"
-                    playsinline
-                >
-                </video>
-            `;
-
-            initPlayer();
-        }
-
-        // Post message to parent window (for iframe communication)
-        function postMessage(event, data = {}) {
-            if (window.parent && window.parent !== window) {
-                window.parent.postMessage({
-                    source: 'vast-player',
-                    event: event,
-                    data: data
-                }, '*');
-            }
-        }
-
-        // Listen for messages from parent
-        window.addEventListener('message', function(e) {
-            if (e.data && e.data.target === 'vast-player') {
-                switch(e.data.action) {
-                    case 'play':
-                        player?.play();
-                        break;
-                    case 'pause':
-                        player?.pause();
-                        break;
-                    case 'reload':
-                        retryAd();
-                        break;
-                }
-            }
-        });
     </script>
 </body>
 </html>
