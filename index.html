@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player VAST/VPAID - Metrike</title>
+
+    <!-- Video.js CSS -->
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet">
+
+    <!-- videojs-contrib-ads CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/videojs-contrib-ads@7.5.2/dist/videojs-contrib-ads.css" rel="stylesheet">
+
+    <!-- Google IMA CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/videojs-ima@2.3.0/dist/videojs.ima.css" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #00d4ff;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        .player-wrapper {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 212, 255, 0.2);
+        }
+
+        .video-js {
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 */
+        }
+
+        .config-section {
+            margin-top: 30px;
+            background: #16213e;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .config-section h2 {
+            margin-bottom: 15px;
+            color: #00d4ff;
+            font-size: 18px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #2a3a5c;
+            border-radius: 8px;
+            background: #0f0f23;
+            color: #fff;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: #2a3a5c;
+            color: #fff;
+            margin-left: 10px;
+        }
+
+        .embed-section {
+            margin-top: 30px;
+            background: #16213e;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .embed-code {
+            background: #0f0f23;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: #00ff88;
+        }
+
+        .copy-btn {
+            margin-top: 10px;
+            background: #2a3a5c;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .copy-btn:hover {
+            background: #3a4a6c;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .status.success {
+            background: rgba(0, 255, 136, 0.1);
+            color: #00ff88;
+            border: 1px solid #00ff88;
+        }
+
+        .status.error {
+            background: rgba(255, 68, 68, 0.1);
+            color: #ff4444;
+            border: 1px solid #ff4444;
+        }
+
+        .status.info {
+            background: rgba(0, 212, 255, 0.1);
+            color: #00d4ff;
+            border: 1px solid #00d4ff;
+        }
+
+        .vpaid-options {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .vpaid-options label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: #ccc;
+        }
+
+        .vpaid-options input[type="radio"] {
+            width: auto;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .footer a {
+            color: #00d4ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Player VAST/VPAID</h1>
+        <p class="subtitle">Teste suas tags de anuncio com suporte completo a VAST 2.0/3.0/4.0 e VPAID 2.0</p>
+
+        <div class="player-wrapper">
+            <video
+                id="vast-player"
+                class="video-js vjs-big-play-centered vjs-fluid"
+                controls
+                preload="auto"
+                poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1920' height='1080' viewBox='0 0 1920 1080'%3E%3Crect fill='%23000'/%3E%3Ctext x='50%25' y='50%25' fill='%23333' font-size='48' text-anchor='middle' dy='.3em'%3EPlayer VAST/VPAID%3C/text%3E%3C/svg%3E"
+            >
+                <source src="" type="video/mp4">
+                <p class="vjs-no-js">Para assistir este video, habilite JavaScript ou use um navegador que suporte HTML5 video.</p>
+            </video>
+        </div>
+
+        <div id="status-container"></div>
+
+        <div class="config-section">
+            <h2>Configuracao da Tag VAST/VPAID</h2>
+
+            <div class="form-group">
+                <label for="vast-url">URL da Tag VAST/VPAID:</label>
+                <textarea id="vast-url" placeholder="Cole aqui a URL da sua tag VAST ou VPAID...">https://vast.doubleverify.com/v3/vast?_media=3&ctx=42465539&cmp=DV2159697&sid=40725&plc=181570&adsrv=166&blk=1&psf=1&_vast=https%3A%2F%2Fservedby.metrike.com.br%2Fvast.spark%3FsetID%3D68524%26ID%3D181570&_api=[APIFRAMEWORKS]&_ssm=[SERVERSIDE]&_tsm=[TIMESTAMP]&gdpr=${GDPR}&gdpr_consent=${GDPR_CONSENT_126}&_abm=[APPBUNDLE]&_pum=[PAGEURL]</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="content-url">URL do Video de Conteudo (opcional):</label>
+                <input type="text" id="content-url" placeholder="URL do video que sera exibido apos o anuncio (deixe vazio para apenas testar o ad)">
+            </div>
+
+            <div class="form-group">
+                <label>Modo VPAID:</label>
+                <div class="vpaid-options">
+                    <label>
+                        <input type="radio" name="vpaid-mode" value="2" checked>
+                        Enabled (Recomendado)
+                    </label>
+                    <label>
+                        <input type="radio" name="vpaid-mode" value="1">
+                        Insecure
+                    </label>
+                    <label>
+                        <input type="radio" name="vpaid-mode" value="0">
+                        Disabled
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn" onclick="loadVastTag()">Carregar Tag</button>
+            <button class="btn btn-secondary" onclick="resetPlayer()">Resetar Player</button>
+        </div>
+
+        <div class="embed-section">
+            <h2>Codigo Embed</h2>
+            <p style="color: #888; margin-bottom: 15px; font-size: 14px;">Use este codigo para incorporar o player no seu site:</p>
+
+            <div class="embed-code" id="embed-code">&lt;!-- Player VAST/VPAID - Metrike --&gt;
+&lt;div id="vast-player-container"&gt;&lt;/div&gt;
+&lt;script src="https://[SEU-DOMINIO]/embed.js"
+        data-vast-url="[SUA-TAG-VAST]"
+        data-width="100%"
+        data-height="auto"&gt;
+&lt;/script&gt;</div>
+
+            <button class="copy-btn" onclick="copyEmbed()">Copiar Codigo</button>
+            <button class="copy-btn" onclick="generateEmbed()">Gerar com Tag Atual</button>
+        </div>
+
+        <div class="footer">
+            <p>Player VAST/VPAID v1.0 | Powered by <a href="https://videojs.com" target="_blank">Video.js</a> + <a href="https://developers.google.com/interactive-media-ads" target="_blank">Google IMA SDK</a></p>
+        </div>
+    </div>
+
+    <!-- Video.js -->
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+
+    <!-- Google IMA SDK -->
+    <script src="https://imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
+
+    <!-- videojs-contrib-ads (required for IMA) -->
+    <script src="https://cdn.jsdelivr.net/npm/videojs-contrib-ads@7.5.2/dist/videojs-contrib-ads.min.js"></script>
+
+    <!-- videojs-ima -->
+    <script src="https://cdn.jsdelivr.net/npm/videojs-ima@2.3.0/dist/videojs.ima.min.js"></script>
+
+    <script>
+        let player = null;
+
+        // Placeholder video (1 second of silence - base64 encoded tiny mp4)
+        const PLACEHOLDER_VIDEO = 'https://storage.googleapis.com/interactive-media-ads/media/android.mp4';
+
+        // Initialize player on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initPlayer();
+        });
+
+        function initPlayer() {
+            // Dispose existing player if any
+            if (player) {
+                try {
+                    player.dispose();
+                } catch(e) {}
+            }
+
+            // Create video element again if disposed
+            const wrapper = document.querySelector('.player-wrapper');
+            if (!document.getElementById('vast-player')) {
+                wrapper.innerHTML = `
+                    <video
+                        id="vast-player"
+                        class="video-js vjs-big-play-centered vjs-fluid"
+                        controls
+                        preload="auto"
+                    >
+                        <p class="vjs-no-js">Para assistir este video, habilite JavaScript.</p>
+                    </video>
+                `;
+            }
+
+            // Initialize Video.js with placeholder
+            player = videojs('vast-player', {
+                controls: true,
+                autoplay: false,
+                preload: 'auto',
+                fluid: true,
+                aspectRatio: '16:9',
+                sources: [{ src: PLACEHOLDER_VIDEO, type: 'video/mp4' }]
+            });
+
+            showStatus('Player inicializado. Cole sua tag VAST/VPAID e clique em "Carregar Tag".', 'info');
+        }
+
+        function loadVastTag() {
+            const vastUrl = document.getElementById('vast-url').value.trim();
+            const contentUrl = document.getElementById('content-url').value.trim();
+            const vpaidMode = document.querySelector('input[name="vpaid-mode"]:checked').value;
+
+            if (!vastUrl) {
+                showStatus('Por favor, insira uma URL de tag VAST/VPAID.', 'error');
+                return;
+            }
+
+            showStatus('Carregando tag VAST/VPAID...', 'info');
+
+            // Reset player
+            if (player) {
+                try {
+                    player.dispose();
+                } catch(e) {}
+            }
+
+            // Recreate video element
+            const wrapper = document.querySelector('.player-wrapper');
+            wrapper.innerHTML = `
+                <video
+                    id="vast-player"
+                    class="video-js vjs-big-play-centered vjs-fluid"
+                    controls
+                    preload="auto"
+                >
+                    <p class="vjs-no-js">Para assistir este video, habilite JavaScript.</p>
+                </video>
+            `;
+
+            // Use placeholder if no content URL
+            const videoSource = contentUrl || PLACEHOLDER_VIDEO;
+
+            player = videojs('vast-player', {
+                controls: true,
+                autoplay: false,
+                preload: 'auto',
+                fluid: true,
+                aspectRatio: '16:9',
+                sources: [{ src: videoSource, type: 'video/mp4' }]
+            });
+
+            // Wait for player to be ready
+            player.ready(function() {
+                // Configure IMA options
+                const imaOptions = {
+                    adTagUrl: vastUrl,
+                    id: 'vast-player',
+                    vpaidMode: parseInt(vpaidMode),
+                    autoPlayAdBreaks: true,
+                    adsRenderingSettings: {
+                        enablePreloading: true
+                    },
+                    contribAdsSettings: {
+                        timeout: 8000,
+                        prerollTimeout: 8000
+                    }
+                };
+
+                // Initialize IMA plugin
+                try {
+                    player.ima(imaOptions);
+
+                    // Event listeners
+                    player.on('ads-request', function(e) {
+                        console.log('Ads request:', e);
+                        showStatus('Solicitando anuncio...', 'info');
+                    });
+
+                    player.on('ads-load', function(e) {
+                        console.log('Ads loaded:', e);
+                    });
+
+                    player.on('ads-ad-started', function(e) {
+                        console.log('Ad started:', e);
+                        showStatus('Anuncio em reproducao...', 'success');
+                    });
+
+                    player.on('ads-ad-ended', function(e) {
+                        console.log('Ad ended:', e);
+                        showStatus('Anuncio finalizado.', 'success');
+                    });
+
+                    player.on('adserror', function(e) {
+                        console.error('Ad error:', e);
+                        const errorMsg = e.data?.AdError?.getMessage?.() || 'Verifique o console para detalhes';
+                        showStatus('Erro no anuncio: ' + errorMsg, 'error');
+                    });
+
+                    player.on('adsready', function() {
+                        console.log('Ads ready');
+                        showStatus('Pronto! Clique no PLAY do video para iniciar o anuncio.', 'success');
+                    });
+
+                    // Set up click handler on big play button to initialize ads
+                    const startEvent = 'click';
+                    player.one(startEvent, function() {
+                        player.ima.initializeAdDisplayContainer();
+                        player.ima.requestAds();
+                        player.play();
+                    });
+
+                    showStatus('Tag carregada! Clique no PLAY para iniciar o anuncio.', 'success');
+
+                } catch (err) {
+                    console.error('IMA init error:', err);
+                    showStatus('Erro ao inicializar IMA: ' + err.message, 'error');
+                }
+            });
+        }
+
+        function resetPlayer() {
+            initPlayer();
+            document.getElementById('vast-url').value = '';
+            document.getElementById('content-url').value = '';
+        }
+
+        function showStatus(message, type) {
+            const container = document.getElementById('status-container');
+            container.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function copyEmbed() {
+            const embedCode = document.getElementById('embed-code').innerText;
+            navigator.clipboard.writeText(embedCode).then(() => {
+                alert('Codigo copiado para a area de transferencia!');
+            });
+        }
+
+        function generateEmbed() {
+            const vastUrl = document.getElementById('vast-url').value.trim();
+            if (!vastUrl) {
+                alert('Insira uma tag VAST primeiro.');
+                return;
+            }
+
+            const encodedVast = encodeURIComponent(vastUrl);
+            const embedCode = `<!-- Player VAST/VPAID - Metrike -->
+<iframe
+    src="${window.location.origin}/embed.html?vast=${encodedVast}"
+    width="640"
+    height="360"
+    frameborder="0"
+    allowfullscreen
+    allow="autoplay; encrypted-media"
+></iframe>`;
+
+            document.getElementById('embed-code').innerText = embedCode;
+            showStatus('Codigo embed gerado! Copie e cole no seu site.', 'success');
+        }
+    </script>
+</body>
+</html>

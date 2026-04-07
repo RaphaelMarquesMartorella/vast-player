@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemplo - Site PB Agora</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .header {
+            background: #1a1a2e;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .article {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .article h1 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .article p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        .player-container {
+            margin: 20px 0;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .player-container iframe {
+            display: block;
+            width: 100%;
+            aspect-ratio: 16/9;
+            border: none;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #999;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>PB Agora - Exemplo de Embed</h2>
+    </div>
+
+    <div class="content">
+        <article class="article">
+            <h1>Exemplo de materia com player de anuncio</h1>
+
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+
+            <div class="player-container">
+                <iframe
+                    src="embed.html?vast=https%3A%2F%2Fvast.doubleverify.com%2Fv3%2Fvast%3F_media%3D3%26ctx%3D42465539%26cmp%3DDV2159697%26sid%3D40725%26plc%3D181570%26adsrv%3D166%26blk%3D1%26psf%3D1%26_vast%3Dhttps%253A%252F%252Fservedby.metrike.com.br%252Fvast.spark%253FsetID%253D68524%2526ID%253D181570%26_api%3D%5BAPIFRAMEWORKS%5D%26_ssm%3D%5BSERVERSIDE%5D%26_tsm%3D%5BTIMESTAMP%5D%26gdpr%3D%24%7BGDPR%7D%26gdpr_consent%3D%24%7BGDPR_CONSENT_126%7D%26_abm%3D%5BAPPBUNDLE%5D%26_pum%3D%5BPAGEURL%5D"
+                    allowfullscreen
+                    allow="autoplay; encrypted-media"
+                ></iframe>
+            </div>
+
+            <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+
+            <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+        </article>
+    </div>
+
+    <div class="footer">
+        <p>Exemplo de integracao do Player VAST/VPAID</p>
+    </div>
+</body>
+</html>
