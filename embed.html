@@ -12,6 +12,31 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
         #content_video { width: 100%; height: 100%; }
+
+        /* Fix VPAID black screen - ensure ad containers are visible */
+        .video-js .ima-ad-container {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 1000 !important;
+        }
+        .video-js .ima-ad-container iframe,
+        .video-js .ima-ad-container video,
+        .video-js .ima-ad-container object,
+        .video-js .ima-ad-container embed {
+            width: 100% !important;
+            height: 100% !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+        }
+        /* VPAID slot container */
+        .video-js .ima-ad-container > div {
+            width: 100% !important;
+            height: 100% !important;
+        }
         .error-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); display: flex; flex-direction: column;
@@ -47,7 +72,7 @@
         // Parse URL params
         const params = new URLSearchParams(window.location.search);
         const vastUrl = params.get('vast') ? decodeURIComponent(params.get('vast')) : '';
-        const vpaidMode = parseInt(params.get('vpaid') || '2');
+        const vpaidMode = parseInt(params.get('vpaid') || '1'); // Default to INSECURE mode for better VPAID compatibility
 
         if (!vastUrl) {
             document.getElementById('error-message').textContent = 'Nenhuma tag VAST fornecida';
