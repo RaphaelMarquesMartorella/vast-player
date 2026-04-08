@@ -72,7 +72,7 @@
         // Parse URL params
         const params = new URLSearchParams(window.location.search);
         const vastUrl = params.get('vast') ? decodeURIComponent(params.get('vast')) : '';
-        const vpaidMode = parseInt(params.get('vpaid') || '1'); // Default to INSECURE mode for better VPAID compatibility
+        const vpaidMode = parseInt(params.get('vpaid') || '2'); // Default to ENABLED (IMA SDK standard)
 
         if (!vastUrl) {
             document.getElementById('error-message').textContent = 'Nenhuma tag VAST fornecida';
